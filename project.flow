@@ -1,12 +1,12 @@
 {
   project: {
-    name: 'BasicTemplate',
+    name: 'Juego',
     version: '1.0.0',
-    author: 'Citizen of Melee',
+    author: 'Yo',
 
     app: {
-      name: 'basictemplate',
-      package: 'io.itch.citizenofmelee'
+      name: 'juegoFracciones',
+      package: 'com.luxeengine.juegoFracciones'
     },
 
     build: {
