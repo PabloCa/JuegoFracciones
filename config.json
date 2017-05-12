@@ -1,7 +1,7 @@
 {
   "game": {
-    "name": "TEMPLATE",
-    "menu_text": "TEMPLATE is a game by Citizen of Mêlée",
+    "name": "Juego",
+    "menu_text": "TEMPLATE is a game by Yo",
     "splash_screens": 1,
     "controllers": 4,
     "allow_keyboard": true,
