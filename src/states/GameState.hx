@@ -12,22 +12,57 @@ import luxe.Color;
 import lib.AutoCanvas;
 import luxe.Vector;
 
-import componentes.Arrastrador;
+typedef Pista = {
+  sprite :  Sprite,
+}
+
+
 /**
  * Example game state. Shows controller input.
  */
 class GameState extends State {
+
+  
   var state_machine : States;
 
+  var fichas = {
+    tipos: [{
+        ancho : 64,
+        color : 0xff0000
+      },{
+        ancho : 96,
+        color : 0xf94b04
+      },{
+        ancho : 128,
+        color : 0xffff00
+      },{
+        ancho : 32,
+        color : 0x00ff00
+      }
+    ]
+  };
+  
   var fondo:Geometry;
   var canvas: mint.Canvas;
   var focus: ControllerFocus; 
   var delta_time_text : Text;
   var text1: mint.TextEdit;
   var block : Sprite;
-  var meta : Sprite;
-  var arrastrador: Arrastrador;
-  var restante : Float;
+  //var pista1 : Sprite;
+  //var pista2 : Sprite;
+  var pista1 ={
+    sprite : null,
+    listaFichas : []
+  };
+  var pista2 ={
+    sprite : null,
+    listaFichas : []
+  };
+  var arrastrador: componentes.Arrastrador;
+  var acum1 : Float=0;
+  var acum2 : Float=0;
+  var longitudPista : Float=750;
+  var turno : Bool = false;
 
   public function new(name:String) {
     super({name:name});
@@ -37,7 +72,7 @@ class GameState extends State {
   }
 
   override function onenter<T> (_:T) {
-    trace("Arreglar el onleave");
+    trace("Terminar de hacer el destroy de los sprites");
 
     fondo = Luxe.draw.box({
         x : 0, y : 0,
@@ -96,20 +131,49 @@ class GameState extends State {
       text_size: 12,
       options: { },
       onclick: function(_, _) {
+        trace('reiniciando');
+        acum1=acum2=0;
+        acum1=acum2=0;
+
+        for(a in 0...pista1.listaFichas.length){
+          pista1.listaFichas[a].destroy();
+        }
+        for(a in 0...pista2.listaFichas.length){
+          pista2.listaFichas[a].destroy();
+        }
+        pista1.listaFichas=[];
+        pista2.listaFichas=[];
         Main.machine.set("game_state");
       }
     });
 
+    var boton_test = new mint.Button({
+          parent: window,
+          name: 'boton3',
+          x: 10, y: 90, w: 110, h: 22,
+          text: 'test',
+          text_size: 12,
+          options: { },
+          onclick: function(_, _) {
+            test();                           
+          }
+    });
+
     //sprites
 
-    meta = new Sprite({
-        name: 'meta',
+    pista1.sprite = new Sprite({
+        name: 'pista1',
         pos: new phoenix.Vector(450,475,0,0),
         color: new Color(0,0,255,1.0),            
-        size: new Vector(750, 168)
+        size: new Vector(longitudPista, 168)
     });
-    restante=meta.size.x;
-    text1.text=restante+'';
+
+    pista2.sprite = new Sprite({
+        name: 'pista2',
+        pos: new phoenix.Vector(450,300,0,0),
+        color: new Color(0,0,255,1.0),            
+        size: new Vector(longitudPista, 168)
+    });
 
     block = new Sprite({
         name: 'a sprite',
@@ -118,65 +182,60 @@ class GameState extends State {
         size: new Vector(128, 128), 
 
     });
-    arrastrador = new Arrastrador({ name:'arrastrador' });
+    arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
     block.add(arrastrador);
-    arrastrador.setMeta(meta);
-
-    /*Luxe.draw.ngon({
-      r:200,
-      sides : 3,
-      solid : true,
-      color: new Color(1,1,1,0.1),
-      x:Luxe.screen.mid.x, y:Luxe.screen.mid.y
-    });*/
+    arrastrador.setMeta(pista1.sprite);
 
   }
   function colocar(){
+    var extra : Float=0;
+    var color: Int=0;
+    var random: Int = Luxe.utils.random.int(0,4);
+    extra=fichas.tipos[random].ancho;
+    color=fichas.tipos[random].color;
 
+    if(turno){
 
-    switch Luxe.utils.random.int(1,5) {
-      case 1:{
-        Luxe.draw.box({
+      pista1.listaFichas.push(
+        new Sprite({
+        pos: new phoenix.Vector(acum1+extra/2+75,475,0,0),
+        color: new Color().rgb(color),
+        size: new Vector(extra, 128), 
+      }));
+      acum1=acum1+extra+1;
+      pista1.listaFichas[pista1.listaFichas.length-1].add(new componentes.SensorClick({ name:'sensor' }));
 
-            x : 75+meta.size.x-restante, y : 412,
-            w : 64,
-            h : 128,      
-            color : new Color().rgb(0xff0000)
-        });
-        restante=restante-65;
-      };
-      case 2: {
-        Luxe.draw.box({
-            x : 75+meta.size.x-restante, y : 412,
-            w : 96,
-            h : 128,      
-            color : new Color().rgb(0xf94b04)
-        });
-        restante=restante-97;
-      };
-      case 3: {
-        Luxe.draw.box({
-            x : 75+meta.size.x-restante, y : 412,
-            w : 128,
-            h : 128,      
-            color : new Color().rgb(0xffff00)
-        });
-        restante=restante-129;
-      };
-      case 4: {
-        Luxe.draw.box({
-            x : 75+meta.size.x-restante, y : 412,
-            w : 32,
-            h : 128,      
-            color : new Color().rgb(0x00ff00)
-        });
-        restante=restante-33;
-      };
-      default: {text1.text='error';};
+    }else{
+
+      pista2.listaFichas.push(
+        new Sprite({
+        pos: new phoenix.Vector(acum2+extra/2+75,300,0,0),
+        color: new Color().rgb(color),
+        size: new Vector(extra, 128), 
+      }));
+      acum2=acum2+extra+1;
+      pista2.listaFichas[pista2.listaFichas.length-1].add(new componentes.SensorClick({ name:'sensor' }));
+
     }
+    text1.text='';
+    if(longitudPista<acum1)text1.text=text1.text+'-partida terminada1';
+    else if(longitudPista<acum2)text1.text=text1.text+'-partida terminada2';
+
+    turno=!turno;
     
-    text1.text=restante+'';
-    if(restante<=0)text1.text=text1.text+'-partida terminada';
+
+  }
+
+  function test(){
+    trace("________datos de componente_________");
+    trace("l1."+pista1.listaFichas.length+" l2."+pista2.listaFichas.length);
+      for(a in 0...pista1.listaFichas.length){
+        trace('La ficha '+(a+1)+' de la pista 1 es:'+pista1.listaFichas[a].get('sensor').estaSeleccionado());
+      }
+
+      for(a in 0...pista2.listaFichas.length){
+        trace('La ficha '+(a+1)+' de la pista 2 es:'+pista2.listaFichas[a].get('sensor').estaSeleccionado());
+      }
   }
 
   override function onleave<T> (_:T) {
