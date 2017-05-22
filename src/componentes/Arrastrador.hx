@@ -8,10 +8,8 @@ import luxe.Input;
 class Arrastrador extends Component {
 
 	var sprite : Sprite;
-	var meta : Sprite;
 	var posicionMouse : luxe.Vector;
-	var arrastrando : Bool = false;
-	
+	var arrastrando : Bool = true;
 
     override function init() {
         sprite = cast entity;
@@ -22,28 +20,28 @@ class Arrastrador extends Component {
     }
 
 
-	public function setMeta( m:Sprite ) {
-        meta=m;
-    }
-
     override function update( delta:Float ){
     	if(posicionMouse!=null){
             if(sprite.point_inside(posicionMouse)) {
                 if(Luxe.input.mousedown(luxe.MouseButton.left)) {
-                    sprite.pos.x=posicionMouse.x;
-                    sprite.pos.y=posicionMouse.y;
+
+                    sprite.pos.x=normalizarX(posicionMouse.x);
+                    sprite.pos.y=normalizarY(posicionMouse.y);
                     arrastrando=true;                                    
                 }          
             }           
         }
-        if(Luxe.input.mousereleased(luxe.MouseButton.left)){   
 
-            if(arrastrando && meta.point_inside(posicionMouse)){
-                sprite.pos.x=meta.pos.x;
-                sprite.pos.y=meta.pos.y;
+    }
+    function normalizarX(x: Float):Float{
+        if(x<0)return 0;
+        if(x>Luxe.screen.w)return Luxe.screen.w-1;
+        return x;
+    }
 
-            }
-            arrastrando=false;
-        }
+    function normalizarY(y: Float):Float{
+        if(y<0)return 0;
+        if(y>Luxe.screen.h)return Luxe.screen.h-1;
+        return y;
     }
 }

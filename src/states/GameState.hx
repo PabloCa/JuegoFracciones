@@ -18,16 +18,16 @@ class GameState extends State {
 
   var fichas = {
     tipos: [{
-        ancho : 64,
+        ancho : 63,
         color : 0xff0000
       },{
-        ancho : 96,
+        ancho : 95,
         color : 0xf94b04
       },{
-        ancho : 128,
+        ancho : 127,
         color : 0xff00d9
       },{
-        ancho : 32,
+        ancho : 31,
         color : 0x00ff00
       }
     ]
@@ -40,6 +40,8 @@ class GameState extends State {
   var text1: mint.TextEdit;
   var block : Sprite;
   var indicadorTurno : Sprite;
+  var spawn : Sprite;
+  var posicionMouse : luxe.Vector;
   var pista1 ={
     sprite : null,
     listaFichas : []
@@ -62,7 +64,7 @@ class GameState extends State {
   }
 
   override function onenter<T> (_:T) {
-    trace("Game state");
+    trace("--en chequearReemplazoRecursivo ver si es lengh o lengh-1 en los if");
 
     fondo = Luxe.draw.box({
         x : 0, y : 0,
@@ -97,7 +99,7 @@ class GameState extends State {
         h_max: 131, h_min: 131, w_min: 131,
     });
     text1 = new mint.TextEdit({
-            parent: window, name: 'textedit1', text: 'hola', renderable: true,
+            parent: window, name: 'textedit1', text: '>:D', renderable: true,
             x: 10, y:32, w: 256-10-10, h: 22
         });
 
@@ -163,7 +165,7 @@ class GameState extends State {
         }
         pista1.sprite.destroy();
         pista2.sprite.destroy();
-        block.destroy();
+        spawn.destroy();
         indicadorTurno.destroy();
         pista1.listaFichas=[];
         pista2.listaFichas=[];
@@ -172,16 +174,13 @@ class GameState extends State {
       }
     });
 
-    block = new Sprite({
-        name: 'a sprite',
+    spawn = new Sprite({
+        name: 'spawn',
         pos: new phoenix.Vector(500,100,0,0),
-        color: new Color().rgb(0xf94b04),
+        color: new Color().rgb(0xff00d9),
         size: new Vector(128, 128), 
-
     });
-    arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
-    block.add(arrastrador);
-    arrastrador.setMeta(pista1.sprite);
+
 
     indicadorTurno = new Sprite({
         name: 'indicador',
@@ -192,11 +191,31 @@ class GameState extends State {
           r : 20,
         })
 
-    });
-    
-    
+    });  
 
   }
+
+  override public function onmousedown(event:MouseEvent):Void{
+      trace(event.pos.x+'-'+event.pos.y);
+      if(spawn.point_inside(event.pos)){   
+          block = new Sprite({
+            name: 'bloque',
+            pos: new phoenix.Vector(spawn.pos.x,spawn.pos.y,0,0),
+            color: new Color().rgb(0xff00d9),
+            size: new Vector(128, 128), 
+
+          });
+          arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+          block.add(arrastrador);    
+      }
+  }
+  
+
+  override function onmousemove( event:MouseEvent ) {     
+    posicionMouse=event.pos;
+  }
+
+  //coloca las fichitas
   function colocar(){
     var extra : Float=0;
     var color: Int=0;
@@ -244,11 +263,120 @@ class GameState extends State {
     }
 
   }
-
+  //para probar cosas
   function test(){
-
+    for(a in 0...pista1.listaFichas.length){
+        //pista1.listaFichas[a].destroy();
+      }
 
   }
+  //sustituye el sprite por las fichas, si corresponde
+  function identificarReemplazo(ancho : Float, col : Color){
+    var acum : Float=0;
+    var primero : Int = -1;
+    var ultimo : Int = -1;
+    var pista : Int = -1;
+    for(a in 0...pista1.listaFichas.length){
+      if(block.point_inside(pista1.listaFichas[a].pos)) {
+        if(pista1.listaFichas[a].size.x+1<ancho){
+          pista=1;
+          acum=acum+pista1.listaFichas[a].size.x+1;
+          if(primero==-1){
+            primero=a;
+          }else ultimo=a;
+        }
+      }
+    }
+    for(a in 0...pista2.listaFichas.length){
+      if(block.point_inside(pista2.listaFichas[a].pos)) {
+        if(pista2.listaFichas[a].size.x+1<ancho){
+          pista=2;
+          acum=acum+pista2.listaFichas[a].size.x+1;   
+          if(primero==-1){
+            primero=a;
+          }else ultimo=a;     
+        }
+      }  
+    }
+    if(acum==ancho){
+      trace('primero.'+primero+' ultimo.'+ultimo+' pista.'+pista); 
+
+      acum=0;
+
+      if(primero!=-1 && ultimo != -1){
+        trace('dentro de primer if');
+        if(pista==1){          
+          
+          
+          for(a in primero...ultimo+1){
+            acum1=acum1-pista1.listaFichas[a].size.x-1;
+            pista1.listaFichas[a].destroy();            
+          } 
+
+          pista1.listaFichas.splice(primero,ultimo-primero+1);          
+
+          
+
+          pista1.listaFichas.push(
+            new Sprite({
+            pos: new phoenix.Vector(acum1+(ancho-1)/2+75,475,0,0),
+            color: col,
+            size: new Vector(ancho-1, 128), 
+          }));
+          acum1=acum1+ancho;
+          var componenteColor= new componentes.SensorClick({ name:'sensor' });
+          componenteColor.colorInicial(col);
+          pista1.listaFichas[pista1.listaFichas.length-1].add(componenteColor);
+
+          pista1.listaFichas.insert(primero,pista1.listaFichas.pop());
+
+          for(a in 0...pista1.listaFichas.length){
+            trace(a);
+            var extra= pista1.listaFichas[a].size.x;
+            pista1.listaFichas[a].pos.x=acum+extra/2+75;
+            acum=acum+extra+1;
+          }           
+
+          trace('pasó');
+        }else if(pista==2){
+
+          
+          
+          for(a in primero...ultimo+1){
+              acum2=acum2-pista2.listaFichas[a].size.x-1;
+              pista2.listaFichas[a].destroy();          
+          } 
+          
+          pista2.listaFichas.splice(primero,ultimo-primero+1);
+          
+          pista2.listaFichas.push(
+            new Sprite({
+            pos: new phoenix.Vector(acum2+(ancho-1)/2+75,300,0,0),
+            color: col,
+            size: new Vector(ancho-1, 128), 
+          }));
+          acum2=acum2+ancho;
+          var componenteColor= new componentes.SensorClick({ name:'sensor' });
+          componenteColor.colorInicial(col);
+          pista2.listaFichas[pista2.listaFichas.length-1].add(componenteColor);
+
+          pista2.listaFichas.insert(primero,pista2.listaFichas.pop());
+
+          for(a in 0...pista2.listaFichas.length){
+            trace(a);
+            var extra= pista2.listaFichas[a].size.x;
+            pista2.listaFichas[a].pos.x=acum+extra/2+75;
+            acum=acum+extra+1;
+          }
+
+        }
+      }
+      
+    }
+    block.destroy(); 
+  }
+
+
 
   override function onleave<T> (_:T) {
     trace("Leave game state");
@@ -267,11 +395,23 @@ class GameState extends State {
   override function update( dt:Float ) {
 
     focus.update(dt);
-    delta_time_text.text = 'dt : ' + dt + '\n average : ' + Luxe.debug.dt_average+'\n fps : ' + 1/Luxe.debug.dt_average;
+    //delta_time_text.text = 'dt : ' + dt + '\n average : ' + Luxe.debug.dt_average+'\n fps : ' + 1/Luxe.debug.dt_average;
 
     var indice1: Int=-1;
     var indice2: Int=-1;
-    if(turno){
+
+    if(Luxe.input.mousereleased(luxe.MouseButton.left)){
+      if(block!=null){
+        if(!block.destroyed){
+          identificarReemplazo(block.size.x,block.color);
+                   
+        }
+      }
+      
+    }
+
+    //iontercambio
+    if(turno){//intercambio de fichas pista 1
       for(a in 0...pista1.listaFichas.length){
         if(pista1.listaFichas[a].get('sensor').estaSeleccionado()){
           if(indice1<0)indice1=a;
@@ -288,14 +428,14 @@ class GameState extends State {
         pista1.listaFichas[indice1].get('sensor').quitarSeleccion();
         pista1.listaFichas[indice2].get('sensor').quitarSeleccion();
         //reposicionando
-        for(a in 0...pista1.listaFichas.length){
+        for(a in 0...pista1.listaFichas.length){ //--se puede optimizar no partiendo de 0
           var extra= pista1.listaFichas[a].size.x;
           pista1.listaFichas[a].pos.x=acum+extra/2+75;
           acum=acum+extra+1;
         }
       }
 
-    }else{
+    }else{ //intercambio de fichas pista2
       for(a in 0...pista2.listaFichas.length){
         if(pista2.listaFichas[a].get('sensor').estaSeleccionado()){
           if(indice1<0)indice1=a;
@@ -319,6 +459,9 @@ class GameState extends State {
         }
       }
     }
+
+    
+
     if (state_machine.current_state != null &&
         state_machine.current_state.name == "pause") {
           // We don't do anything while paused
