@@ -16,23 +16,26 @@ class Arrastrador extends Component {
     }
 
     override function onmousemove( event:MouseEvent ) {    	
-        posicionMouse=event.pos;
-    }
-
-
-    override function update( delta:Float ){
-    	if(posicionMouse!=null){
-            if(sprite.point_inside(posicionMouse)) {
-                if(Luxe.input.mousedown(luxe.MouseButton.left)) {
-
-                    sprite.pos.x=normalizarX(posicionMouse.x);
-                    sprite.pos.y=normalizarY(posicionMouse.y);
-                    arrastrando=true;                                    
-                }          
-            }           
+        if(arrastrando){
+            sprite.pos.x=normalizarX(event.x);
+            sprite.pos.y=normalizarY(event.y);
         }
-
     }
+
+
+    override public function onmousedown(event:MouseEvent):Void
+    {
+        if(posicionMouse!=null){
+            if(sprite.point_inside(posicionMouse)) {
+                arrastrando=true;
+            }
+        }
+    }
+    override public function onmouseup(event:MouseEvent):Void
+    {
+        arrastrando=false;
+    }
+
     function normalizarX(x: Float):Float{
         if(x<0)return 0;
         if(x>Luxe.screen.w)return Luxe.screen.w-1;

@@ -54,7 +54,6 @@ class SensorClick extends Component {
             size: new Vector(sprite.size.x-10, sprite.size.y-10), 
         });
         sprite.color=new Color().rgb(0xffffff);
-        trace('el color es:'+sprite.color);
         seleccionado=true;
     }
 

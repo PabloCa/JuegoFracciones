@@ -26,7 +26,10 @@ class GameState extends State {
   var text1: mint.TextEdit;
   var block : Sprite;
   var indicadorTurno : Sprite;
-  var spawn : Sprite;
+  var spawn1 : Sprite;
+  var spawn2 : Sprite;
+  var spawn3 : Sprite;
+  var spawn0 : Sprite;
   var posicionMouse : luxe.Vector;
 
   var pista1 : Pista;
@@ -35,7 +38,7 @@ class GameState extends State {
   var acum1 : Float=0;   //se pueden poner en la funcion colocar, localmente
   var acum2 : Float=0;
   var turno : Bool = false;  //false arriba true abajo
-
+  var altoFichas : Float = Config.altoFichas;
 
   public function new(name:String) {
     super({name:name});
@@ -45,7 +48,7 @@ class GameState extends State {
   }
 
   override function onenter<T> (_:T) {
-    trace("en pista, identificarReemplazo, la clase ficha que se arrastra tiene que ser el parametro");   
+    trace("Gamestate");   
 
 
     fondo = Luxe.draw.box({
@@ -131,7 +134,9 @@ class GameState extends State {
         }
         pista1.destroy();
         pista2.destroy();
-        spawn.destroy();
+        spawn1.destroy();
+        spawn2.destroy();
+        spawn3.destroy();
         indicadorTurno.destroy();
         pista1.listaFichas=[];
         pista2.listaFichas=[];
@@ -144,27 +149,43 @@ class GameState extends State {
 
     pista1 = new Pista({
         name: 'pista1',
-        pos: new phoenix.Vector(450,475,0,0),
+        pos: new phoenix.Vector(Luxe.screen.w/2,475,0,0),
         color: new Color(0,0,255,1.0),            
-        size: new Vector(Config.longitudPista, 168)
+        size: new Vector(Config.longitudPista, altoFichas*1.3)
     });
 
     pista2 = new Pista({
         name: 'pista2',
-        pos: new phoenix.Vector(450,300,0,0),
+        pos: new phoenix.Vector(Luxe.screen.w/2,300,0,0),
         color: new Color(0,0,255,1.0),            
-        size: new Vector(Config.longitudPista, 168)
+        size: new Vector(Config.longitudPista, altoFichas*1.3)
     });
 
     
-
-    spawn = new Sprite({
+    spawn0 = new Sprite({
         name: 'spawn',
-        pos: new phoenix.Vector(500,100,0,0),
-        color: new Color().rgb(0xff00d9),
-        size: new Vector(128, 128), 
+        pos: new phoenix.Vector(50,100,0,0),
+        color: new Color().rgb(Config.fichas.tipos[0].color),
+        size: new Vector(Config.fichas.tipos[0].ancho, altoFichas), 
     });
-
+    spawn1 = new Sprite({
+        name: 'spawn',
+        pos: new phoenix.Vector(100,100,0,0),
+        color: new Color().rgb(Config.fichas.tipos[1].color),
+        size: new Vector(Config.fichas.tipos[1].ancho, altoFichas), 
+    });
+    spawn2 = new Sprite({
+        name: 'spawn',
+        pos: new phoenix.Vector(200,100,0,0),
+        color: new Color().rgb(Config.fichas.tipos[2].color),
+        size: new Vector(Config.fichas.tipos[2].ancho, altoFichas), 
+    });
+    spawn3 = new Sprite({
+        name: 'spawn',
+        pos: new phoenix.Vector(400,100,0,0),
+        color: new Color().rgb(Config.fichas.tipos[3].color),
+        size: new Vector(Config.fichas.tipos[3].ancho, altoFichas), 
+    });
 
     indicadorTurno = new Sprite({
         name: 'indicador',
@@ -177,21 +198,52 @@ class GameState extends State {
 
     });  
 
-    delta_time_text.text = 'con ejec se ponen fichitas \n se pueden cambiar las fichas seleccionandolas con click \n solo se pueden cambiar si el circulo apunta a la pista de las fichas \n el cuadrado de al lado se puede arastrar ---> \n si se arrastra a un grupo de fichas que sumadas tengan el mismo ancho \n que el cuadrado, estas fichitas se reemplazaran por una ficha rosa';
+    //delta_time_text.text = 'con ejec se ponen fichitas \n se pueden cambiar las fichas seleccionandolas con click \n solo se pueden cambiar si el circulo apunta a la pista de las fichas \n el cuadrado de al lado se puede arastrar ---> \n si se arrastra a un grupo de fichas que sumadas tengan el mismo ancho \n que el cuadrado, estas fichitas se reemplazaran por una ficha rosa';
 
   }
 
   override public function onmousedown(event:MouseEvent):Void{
-      if(spawn.point_inside(event.pos)){   
-          block = new Sprite({
-            name: 'bloque',
-            pos: new phoenix.Vector(spawn.pos.x,spawn.pos.y,0,0),
-            color: new Color().rgb(0xff00d9),
-            size: new Vector(128, 128), 
 
-          });
-          arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
-          block.add(arrastrador);    
+      if(spawn1.point_inside(event.pos)){   
+        block = new Sprite({
+          name: 'bloque',
+          pos: new phoenix.Vector(spawn1.pos.x,spawn1.pos.y,0,0),
+          color: new Color().rgb(Config.fichas.tipos[1].color),
+          size: new Vector(Config.fichas.tipos[1].ancho, altoFichas), 
+
+        });
+        arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+        block.add(arrastrador);    
+      }else if(spawn2.point_inside(event.pos)){
+        block = new Sprite({
+          name: 'bloque',
+          pos: new phoenix.Vector(spawn2.pos.x,spawn2.pos.y,0,0),
+          color: new Color().rgb(Config.fichas.tipos[2].color),
+          size: new Vector(Config.fichas.tipos[2].ancho, altoFichas), 
+
+        });
+        arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+        block.add(arrastrador); 
+      }else if(spawn3.point_inside(event.pos)){  
+        block = new Sprite({
+          name: 'bloque',
+          pos: new phoenix.Vector(spawn3.pos.x,spawn3.pos.y,0,0),
+          color: new Color().rgb(Config.fichas.tipos[3].color),
+          size: new Vector(Config.fichas.tipos[3].ancho, altoFichas), 
+
+        });
+        arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+        block.add(arrastrador); 
+      }else if(spawn0.point_inside(event.pos)){  
+        block = new Sprite({
+          name: 'bloque',
+          pos: new phoenix.Vector(spawn0.pos.x,spawn0.pos.y,0,0),
+          color: new Color().rgb(Config.fichas.tipos[0].color),
+          size: new Vector(Config.fichas.tipos[0].ancho, altoFichas), 
+
+        });
+        arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+        block.add(arrastrador); 
       }
   }
   
@@ -203,17 +255,26 @@ class GameState extends State {
   //coloca las fichitas
   function colocar(){
 
-    var random: Int = Luxe.utils.random.int(0,4);
+    //var random: Int = Luxe.utils.random.int(0,4);
+    var random: Int = Luxe.utils.random.int(0,3);
     text1.text='';
 
     if(turno){  //poniendo fichas
 
-      if(!pista1.colocar(Config.fichas.tipos[random].ancho,new Color().rgb(Config.fichas.tipos[random].color)))text1.text='gana el de abajo';
-
+      //if(!pista1.colocar(Config.fichas.tipos[random].ancho,new Color().rgb(Config.fichas.tipos[random].color)))text1.text='gana el de abajo';
+      
+      for(i in 0...random){
+        if(!pista1.colocar(Config.fichas.tipos[0].ancho,new Color().rgb(Config.fichas.tipos[0].color)))text1.text='gana el de abajo';
+      }
+      
 
     }else{
-      if(!pista2.colocar(Config.fichas.tipos[random].ancho,new Color().rgb(Config.fichas.tipos[random].color)))text1.text='gana el de arriba';
-
+      //if(!pista2.colocar(Config.fichas.tipos[random].ancho,new Color().rgb(Config.fichas.tipos[random].color)))text1.text='gana el de arriba';
+      
+      for(i in 0...random){
+        if(!pista2.colocar(Config.fichas.tipos[0].ancho,new Color().rgb(Config.fichas.tipos[0].color)))text1.text='gana el de arriba';
+      }
+      
     }
     
     turno=!turno;

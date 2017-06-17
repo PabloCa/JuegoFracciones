@@ -12,6 +12,7 @@ class Pista extends Sprite
 {
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
+	private var altoFichas : Float = Config.altoFichas;
 
 	override function init():Void{
 		listaFichas = new Array<Sprite>();
@@ -21,9 +22,9 @@ class Pista extends Sprite
 
 	    listaFichas.push(
         	new Sprite({
-	        pos: new phoenix.Vector(acum+ancho/2+75,this.pos.y,0,0),
+	        pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-Config.longitudPista)/2,this.pos.y,0,0),
 	        color: color,
-	        size: new Vector(ancho, 128), 
+	        size: new Vector(ancho, altoFichas), 
 	      }));
 	    acum=acum+ancho+1;
 	    var componenteColor= new componentes.SensorClick({ name:'sensor' });
@@ -55,7 +56,8 @@ class Pista extends Sprite
 	        }
 	      }
 	    }
-
+	    acumu=acumu-1;
+	    trace("--acumu:"+acumu+"-ancho:"+ancho);
 	    if(acumu==ancho){     //si cooinciden el ancho del sprite arrastrado con los de origen
 
 			if(primero!=-1 && ultimo != -1){     		          
@@ -99,7 +101,7 @@ class Pista extends Sprite
         //reposicionando
         for(a in 0...listaFichas.length){ //--se puede optimizar no partiendo de 0
           var extra= listaFichas[a].size.x;
-          listaFichas[a].pos.x=acum+extra/2+75;
+          listaFichas[a].pos.x=acum+extra/2+(Luxe.screen.w-Config.longitudPista)/2;
           acum=acum+extra+1;
         }
 
