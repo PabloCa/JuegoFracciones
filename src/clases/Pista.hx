@@ -1,4 +1,4 @@
-package entidades;
+package clases;
 
 import luxe.Sprite;
 import luxe.Color;
@@ -13,37 +13,42 @@ class Pista extends Sprite
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
 	private var altoFichas : Float = Config.altoFichas;
+	private var recursos : Recursos;
 
 	override function init():Void{
 		listaFichas = new Array<Sprite>();
 	}
 
+	public function setRecursos(rec:Recursos){
+		this.recursos=rec;
+	}
+
 	public function colocar(ancho : Float, color : Color):Bool{
+		if(acum<Config.longitudPista){
+			listaFichas.push(
+				new Sprite({
+				pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-Config.longitudPista)/2,this.pos.y,0,0),
+				color: color,
+				size: new Vector(ancho, altoFichas), 
+		    }));
+		    acum=acum+ancho+1;
+		    var componenteColor= new componentes.SensorClick({ name:'sensor' });
+		    componenteColor.colorInicial(color);
+		    listaFichas[listaFichas.length-1].add(componenteColor);
 
-	    listaFichas.push(
-        	new Sprite({
-	        pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-Config.longitudPista)/2,this.pos.y,0,0),
-	        color: color,
-	        size: new Vector(ancho, altoFichas), 
-	      }));
-	    acum=acum+ancho+1;
-	    var componenteColor= new componentes.SensorClick({ name:'sensor' });
-	    componenteColor.colorInicial(color);
-	    listaFichas[listaFichas.length-1].add(componenteColor);
-
-	    if(acum>=Config.longitudPista)return false;
-	    else return true;
+		    return true;
+		}return false;
+	    
 	}
 
 
-
-
-	public function identificarReemplazo(block : Sprite){
+	public function identificarReemplazo(block : Sprite, turno:Bool):Bool{
 		var ancho : Float = block.size.x;
 		var col : Color = block.color;
 		var acumu : Float=0;
 	    var primero : Int = -1;
 	    var ultimo : Int = -1;
+	    var exito: Bool = false;
 
 	    //se suman los anchos de lo que se quiera reemplazar, 
 	    for(a in 0...listaFichas.length){
@@ -57,10 +62,13 @@ class Pista extends Sprite
 	      }
 	    }
 	    acumu=acumu-1;
-	    trace("--acumu:"+acumu+"-ancho:"+ancho);
 	    if(acumu==ancho){     //si cooinciden el ancho del sprite arrastrado con los de origen
 
-			if(primero!=-1 && ultimo != -1){     		          
+			if(primero!=-1 && ultimo != -1){     	
+
+				for(a in primero...ultimo+1){     //regreso los recursos
+					recursos.restituir(recursos.identificarTipoAncho(listaFichas[a].size.x),turno);					            
+				} 					          
 		          
 				for(a in primero...ultimo+1){     //destruyo graficamente las fichas que son tapadas
 					acum=acum-listaFichas[a].size.x-1;
@@ -77,10 +85,11 @@ class Pista extends Sprite
 				listaFichas.insert(primero,listaFichas.pop());
 
 				ajustarFichas();
-			
+				exito=true;
 			}
 		}
-		block.destroy();
+		
+		return exito;
 	}
 	
 	public function intercambiar(indice1 : Int, indice2 : Int){
@@ -93,6 +102,13 @@ class Pista extends Sprite
 
         ajustarFichas();
         
+	}
+
+	public function anadirFicha(tipo : Int, posicion : Vector):Bool{
+		if(this.point_inside(posicion)){
+			return colocar(Config.fichas.tipos[tipo].ancho,new Color().rgb(Config.fichas.tipos[tipo].color));
+		}
+		return false;
 	}
 
 	private function ajustarFichas(){ //ordena las fichas graficamente
