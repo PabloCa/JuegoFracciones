@@ -15,7 +15,6 @@
         mint : '*'
       },
       "flags": [
-        // This is required to ensure it builds for web
         "-D haxeJSON"
       ],
       hxcpp: {

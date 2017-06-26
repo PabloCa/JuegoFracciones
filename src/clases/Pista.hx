@@ -12,11 +12,20 @@ class Pista extends Sprite
 {
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
+	public var reserva:Reserva;
 	private var altoFichas : Float = Config.altoFichas;
 	private var recursos : Recursos;
+	
 
 	override function init():Void{
 		listaFichas = new Array<Sprite>();
+
+		reserva = new Reserva({
+	        pos: new phoenix.Vector(600,this.pos.y-320,0,0),
+	        color: new Color(0,0,255,1.0),            
+	        size: new Vector(Config.fichas.tipos[0].ancho*4+4, altoFichas*1.3)
+		});
+
 	}
 
 	public function setRecursos(rec:Recursos){
@@ -24,10 +33,10 @@ class Pista extends Sprite
 	}
 
 	public function colocar(ancho : Float, color : Color):Bool{
-		if(acum<Config.longitudPista){
+		if(acum<this.size.x){
 			listaFichas.push(
 				new Sprite({
-				pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-Config.longitudPista)/2,this.pos.y,0,0),
+				pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-this.size.x)/2,this.pos.y,0,0),
 				color: color,
 				size: new Vector(ancho, altoFichas), 
 		    }));
@@ -41,7 +50,7 @@ class Pista extends Sprite
 	    
 	}
 
-
+	//retorna true si logra reemplazar
 	public function identificarReemplazo(block : Sprite, turno:Bool):Bool{
 		var ancho : Float = block.size.x;
 		var col : Color = block.color;
@@ -107,6 +116,8 @@ class Pista extends Sprite
 	public function anadirFicha(tipo : Int, posicion : Vector):Bool{
 		if(this.point_inside(posicion)){
 			return colocar(Config.fichas.tipos[tipo].ancho,new Color().rgb(Config.fichas.tipos[tipo].color));
+		}else if(this.reserva.point_inside(posicion)){
+			return this.reserva.colocar(Config.fichas.tipos[tipo].ancho,new Color().rgb(Config.fichas.tipos[tipo].color));
 		}
 		return false;
 	}
@@ -117,11 +128,12 @@ class Pista extends Sprite
         //reposicionando
         for(a in 0...listaFichas.length){ //--se puede optimizar no partiendo de 0
           var extra= listaFichas[a].size.x;
-          listaFichas[a].pos.x=acum+extra/2+(Luxe.screen.w-Config.longitudPista)/2;
+          listaFichas[a].pos.x=acum+extra/2+(Luxe.screen.w-this.size.x)/2;
           acum=acum+extra+1;
         }
 
 	}
+
 }
 
 

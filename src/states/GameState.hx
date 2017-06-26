@@ -51,17 +51,12 @@ class GameState extends State {
   override function onenter<T> (_:T) {
     trace("Gamestate--actializar el reiniciar---en anadirFicha en pista, hacer que no se pueda pasar");   
 
-    
-
     fondo = Luxe.draw.box({
         x : 0, y : 0,
         w : Luxe.screen.w,
         h : Luxe.screen.h,
         color : new Color().rgb(0x4286f4)
     });
-
-
-
 
     //deltat
     delta_time_text = new luxe.Text({
@@ -189,7 +184,7 @@ class GameState extends State {
   override public function onmousedown(event:MouseEvent):Void{
 
       var tipo=recursos.clickSpawn(event.pos,turno,fichasRestantes);
-      if(tipo!=-1){
+      if(tipo!=-1){              //si toma de los recursos
         block = new Sprite({
           name: 'bloque',
           pos: new phoenix.Vector(event.pos.x,event.pos.y,0,0),
@@ -199,7 +194,26 @@ class GameState extends State {
         });
         arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
         block.add(arrastrador);  
-      }      
+      }else{                      
+        var pista:Pista;
+        if(turno){
+          pista=pista1;
+        }else{
+          pista=pista1;
+        }
+
+        if(pista.reserva.quitarReserva(event.pos)){              //si toma de las reservas
+          block = new Sprite({
+            name: 'bloque',
+            pos: new phoenix.Vector(event.pos.x,event.pos.y,0,0),
+            color: new Color().rgb(Config.fichas.tipos[0].color),
+            size: new Vector(Config.fichas.tipos[0].ancho, altoFichas), 
+
+          });
+          arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+          block.add(arrastrador);  
+        }
+      } 
   }
   
 
@@ -207,18 +221,26 @@ class GameState extends State {
     posicionMouse=event.pos;
   }
 
+  function obtenerPista():Pista{
+    if(turno)return pista1;
+    else return pista2;
+  }
+
   //coloca las fichitas
   function colocar(){
+    trace("pista1 "+ pista1.acum+"_pista2 "+pista2.acum);
+    var pista=obtenerPista();
+    if(pista.acum%216!=0 || pista.acum==0){
+      turno=!turno;
+      if(turno){    //indicador de turno(la pelotita)
+        indicadorTurno.pos.y=pista1.pos.y;
+      }else{
+        indicadorTurno.pos.y=pista2.pos.y;
+      }
+    }      
 
-    turno=!turno;
-
-    if(turno){    //indicador de turno(la pelotita)
-      indicadorTurno.pos.y=pista1.pos.y;
-    }else{
-      indicadorTurno.pos.y=pista2.pos.y;
-    }
-
-    var random: Int = Luxe.utils.random.int(0,3);
+    //var random: Int = Luxe.utils.random.int(0,3);
+    var random: Int = 20;
 
     fichasRestantes=random;
     text1.text='fichas: '+random;
@@ -246,81 +268,67 @@ class GameState extends State {
     state_machine.unset();
   }
 
+
   override public function onmouseup(event:MouseEvent):Void  //dejando las fichas que se arrastran
     {
 
-      if(block!=null){
-        if(!block.destroyed){
-          var j:Int=recursos.identificarTipoAncho(block.size.x);
-          if(turno){
-            if(j==0){
-              if(pista1.anadirFicha(j, event.pos)){
-                fichasRestantes--;
-                text1.text='fichas restantes: '+fichasRestantes;
-              }else{
-                recursos.restantes[1][0].text=""+(Std.parseInt(recursos.restantes[1][j].text)+1);
-              }
-            }else{
-              if(!pista1.identificarReemplazo(block,turno)){
-                recursos.restantes[1][j].text=""+(Std.parseInt(recursos.restantes[1][j].text)+1);
-              }else if(Std.parseInt(recursos.restantes[1][j].text)==0)text1.text='gana el de abajo';
-            }            
-            
-          }else{
-            if(j==0){
-              if(pista2.anadirFicha(j, event.pos)){
-                fichasRestantes--;
-                text1.text='fichas: '+fichasRestantes;
-              }else{
-                recursos.restantes[0][0].text=""+(Std.parseInt(recursos.restantes[0][j].text)+1);
-              }
-            }else{
-              if(!pista2.identificarReemplazo(block,turno)){
-                recursos.restantes[0][j].text=""+(Std.parseInt(recursos.restantes[0][j].text)+1);
-              }else if(Std.parseInt(recursos.restantes[0][j].text)==0)text1.text='gana el de arriba';
-            }
-            
-          }  
-          block.destroy();                   
+      if(block!=null){ if(!block.destroyed){
+
+        var i:Int;
+        var j:Int=recursos.identificarTipoAncho(block.size.x);
+        var pista:Pista;
+
+        if(turno){
+          i=1;
+          pista=pista1;
+          
+        }else{
+          i=0;
+          pista=pista2; 
         }
-      }
+
+        if(j==0){    //si se esta poniendo un bloque nuevo
+          if(pista.anadirFicha(j, event.pos)){
+            fichasRestantes--;
+            text1.text='fichas restantes: '+fichasRestantes;
+          }else{
+            recursos.restantes[i][j].text=""+(Std.parseInt(recursos.restantes[i][j].text)+1);
+          }
+        }else{      //si se esta reemplazando
+          if(pista.identificarReemplazo(block,turno)){
+            if(Std.parseInt(recursos.restantes[i][3].text)==0)text1.text='juego terminado';
+          }else recursos.restantes[i][j].text=""+(Std.parseInt(recursos.restantes[i][j].text)+1);
+        }  
+
+        block.destroy();    
+        
+      }}
     }
 
   override function update( dt:Float ) {
 
     focus.update(dt);
 
+    //intercambio
     var indice1: Int=-1;
     var indice2: Int=-1;
+    var pista:Pista;
 
-
-    //intercambio
     if(turno){
-      for(a in 0...pista1.listaFichas.length){ //identificando los indices
-        if(pista1.listaFichas[a].get('sensor').estaSeleccionado()){
-          if(indice1<0)indice1=a;
-          else indice2=a;
-        }
-      }
-      if(indice2>-1){
-        pista1.intercambiar(indice1, indice2);
-      }
-
-    }else{ //intercambio de fichas pista2
-
-      for(a in 0...pista2.listaFichas.length){
-        if(pista2.listaFichas[a].get('sensor').estaSeleccionado()){
-          if(indice1<0)indice1=a;
-          else indice2=a;
-        }
-      }
-
-      if(indice2>-1){
-        pista2.intercambiar(indice1, indice2);
-      }
+      pista=pista1;
+    }else{ 
+      pista=pista2;
     }
 
-    
+    for(a in 0...pista.listaFichas.length){ //identificando los indices
+      if(pista.listaFichas[a].get('sensor').estaSeleccionado()){
+        if(indice1<0)indice1=a;
+        else indice2=a;
+      }
+    }
+    if(indice2>-1){
+      pista.intercambiar(indice1, indice2);
+    }    
 
     if (state_machine.current_state != null &&
         state_machine.current_state.name == "pause") {
