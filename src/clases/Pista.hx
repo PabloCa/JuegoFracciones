@@ -12,35 +12,38 @@ class Pista extends Sprite
 {
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
-	public var reserva:Reserva;
-	private var altoFichas : Float = Config.altoFichas;
+	public var reserva:Reserva;	
+	private var altoFichas : Float = Config.altoFichas;//*-------
+	private var anchoFichas : Float = Config.anchoFichas;
 	private var recursos : Recursos;
 	
 
 	override function init():Void{
 		listaFichas = new Array<Sprite>();
 
-		reserva = new Reserva({
-	        pos: new phoenix.Vector(600,this.pos.y-320,0,0),
-	        color: new Color(0,0,255,1.0),            
-	        size: new Vector(Config.fichas.tipos[0].ancho*4+4, altoFichas*1.3)
-		});
+	}
 
+	public function setReserva(posicion:Vector){
+		reserva = new Reserva({
+	        pos: posicion,
+	        color: new Color(0,0,255,1.0),            
+	        size: new Vector(anchoFichas*1.3, Config.fichas.tipos[0].alto*4+4)
+		});
 	}
 
 	public function setRecursos(rec:Recursos){
 		this.recursos=rec;
 	}
 
-	public function colocar(ancho : Float, color : Color):Bool{
-		if(acum<this.size.x){
+	public function colocar(alto : Float, color : Color):Bool{
+		if(!estaLlena()){
 			listaFichas.push(
 				new Sprite({
-				pos: new phoenix.Vector(acum+ancho/2+(Luxe.screen.w-this.size.x)/2,this.pos.y,0,0),
+				pos: new phoenix.Vector(this.pos.x, (this.size.y+Luxe.screen.h)/2-(acum+alto/2),0,0),
 				color: color,
-				size: new Vector(ancho, altoFichas), 
+				size: new Vector(anchoFichas, alto), 
 		    }));
-		    acum=acum+ancho+1;
+		    acum=acum+alto+1;
 		    var componenteColor= new componentes.SensorClick({ name:'sensor' });
 		    componenteColor.colorInicial(color);
 		    listaFichas[listaFichas.length-1].add(componenteColor);
@@ -50,9 +53,14 @@ class Pista extends Sprite
 	    
 	}
 
+	public function estaLlena():Bool{
+		if(this.acum<this.size.y)return false;
+		else return true;
+	}
+
 	//retorna true si logra reemplazar
-	public function identificarReemplazo(block : Sprite, turno:Bool):Bool{
-		var ancho : Float = block.size.x;
+	public function identificarReemplazo(block : Sprite, turno:Int):Bool{
+		var largo : Float = block.size.y;
 		var col : Color = block.color;
 		var acumu : Float=0;
 	    var primero : Int = -1;
@@ -62,8 +70,8 @@ class Pista extends Sprite
 	    //se suman los anchos de lo que se quiera reemplazar, 
 	    for(a in 0...listaFichas.length){
 	      if(block.point_inside(listaFichas[a].pos)) {
-	        if(listaFichas[a].size.x+1<ancho){
-	          acumu=acumu+listaFichas[a].size.x+1;
+	        if(listaFichas[a].size.y+1<largo){
+	          acumu=acumu+listaFichas[a].size.y+1;
 	          if(primero==-1){
 	            primero=a;
 	          }else ultimo=a;
@@ -71,16 +79,16 @@ class Pista extends Sprite
 	      }
 	    }
 	    acumu=acumu-1;
-	    if(acumu==ancho){     //si cooinciden el ancho del sprite arrastrado con los de origen
+	    if(acumu==largo){     //si cooinciden el ancho del sprite arrastrado con los de origen
 
 			if(primero!=-1 && ultimo != -1){     	
 
 				for(a in primero...ultimo+1){     //regreso los recursos
-					recursos.restituir(recursos.identificarTipoAncho(listaFichas[a].size.x),turno);					            
+					recursos.restituir(recursos.identificarTipoAlto(listaFichas[a].size.y),turno);					            
 				} 					          
 		          
 				for(a in primero...ultimo+1){     //destruyo graficamente las fichas que son tapadas
-					acum=acum-listaFichas[a].size.x-1;
+					acum=acum-listaFichas[a].size.y-1;
 					listaFichas[a].destroy();            
 				} 
 
@@ -88,7 +96,7 @@ class Pista extends Sprite
 
 				//pongo una nueva, el sprite que reemplaza al final del array
 
-				colocar(ancho,col);
+				colocar(largo,col);
 
 				//despues de ponerla, la coloco en la posicion donde estaban las otras
 				listaFichas.insert(primero,listaFichas.pop());
@@ -99,6 +107,10 @@ class Pista extends Sprite
 		}
 		
 		return exito;
+	}
+
+	public function obtenerFichasAcumuladas():Float{
+		return acum/25;
 	}
 	
 	public function intercambiar(indice1 : Int, indice2 : Int){
@@ -113,11 +125,12 @@ class Pista extends Sprite
         
 	}
 
+	//decide si se coloca la ficha en la pista o en la reserva
 	public function anadirFicha(tipo : Int, posicion : Vector):Bool{
 		if(this.point_inside(posicion)){
-			return colocar(Config.fichas.tipos[tipo].ancho,new Color().rgb(Config.fichas.tipos[tipo].color));
+			return colocar(Config.fichas.tipos[tipo].alto,new Color().rgb(Config.fichas.tipos[tipo].color));
 		}else if(this.reserva.point_inside(posicion)){
-			return this.reserva.colocar(Config.fichas.tipos[tipo].ancho,new Color().rgb(Config.fichas.tipos[tipo].color));
+			return this.reserva.colocar(Config.fichas.tipos[tipo].alto,new Color().rgb(Config.fichas.tipos[tipo].color));
 		}
 		return false;
 	}
@@ -127,8 +140,8 @@ class Pista extends Sprite
 		acum=0;
         //reposicionando
         for(a in 0...listaFichas.length){ //--se puede optimizar no partiendo de 0
-          var extra= listaFichas[a].size.x;
-          listaFichas[a].pos.x=acum+extra/2+(Luxe.screen.w-this.size.x)/2;
+          var extra= listaFichas[a].size.y;
+          listaFichas[a].pos.y=(this.size.y+Luxe.screen.h)/2-acum-extra/2;
           acum=acum+extra+1;
         }
 

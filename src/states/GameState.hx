@@ -25,7 +25,7 @@ class GameState extends State {
   var focus: ControllerFocus; 
   var delta_time_text : Text;
 
-  var text1: mint.TextEdit;
+  public var text1: mint.TextEdit;
 
   var block : Sprite;
   var indicadorTurno : Sprite;
@@ -35,11 +35,15 @@ class GameState extends State {
   var pista1 : Pista;
   var pista2 : Pista;
   var recursos:Recursos;
+  var ruleta:Ruleta;
+  var premios:Premios;
 
   var arrastrador: componentes.Arrastrador;
-  var turno : Bool = false;  //false arriba true abajo
+  var turno : Int = 2;  //false arriba true abajo
   var altoFichas : Float = Config.altoFichas;
-  var fichasRestantes : Int =0;
+  var anchoFichas : Float = Config.anchoFichas;
+  public var fichasRestantes : Int =0;
+  var tipoDeFichaArrastrada:Int=-1;  //0 para ficha de recursos, 1 para ficha de reserva
 
   public function new(name:String) {
     super({name:name});
@@ -49,7 +53,7 @@ class GameState extends State {
   }
 
   override function onenter<T> (_:T) {
-    trace("Gamestate--actializar el reiniciar---en anadirFicha en pista, hacer que no se pueda pasar");   
+    trace("Gamestate--actializar el reiniciar---en anadirFicha en pista, hacer que no se pueda pasar, la reserva de arriva no funciona");   
 
     fondo = Luxe.draw.box({
         x : 0, y : 0,
@@ -81,7 +85,7 @@ class GameState extends State {
     var window = new mint.Window({
         parent: canvas,name: 'window', title: 'window',
         visible: true, closable: false, collapsible: true,
-        x:700, y:1, w:256, h: 131,
+        x:Luxe.screen.w/2-128, y:400, w:256, h: 131,
         h_max: 131, h_min: 131, w_min: 131,
     });
     text1 = new mint.TextEdit({
@@ -97,7 +101,7 @@ class GameState extends State {
           text_size: 12,
           options: { },
           onclick: function(_, _) {
-            colocar();                            
+            siguienteTurno();                            
           }
     });
 
@@ -136,38 +140,44 @@ class GameState extends State {
         indicadorTurno.destroy();
         pista1.listaFichas=[];
         pista2.listaFichas=[];
-        turno=false;
+        turno=2;
         Main.machine.set("game_state");
       }
     });
 
     //sprites
 
+    ruleta=new Ruleta({
+          pos: new phoenix.Vector(Luxe.screen.w/2,50,0,0),
+          color: new Color(0,0,0,1.0),            
+          size: new Vector(160, 50)
+      });
+    ruleta.setGamestate(this);
+
     recursos=new Recursos();
 
     pista1 = new Pista({
         name: 'pista1',
-        pos: new phoenix.Vector(Luxe.screen.w/2,550,0,0),
+        pos: new phoenix.Vector(Luxe.screen.w/2-Config.anchoFichas*1.3,Luxe.screen.h/2,0,0),
         color: new Color(0,0,255,1.0),            
-        size: new Vector(Config.longitudPista, altoFichas*1.3)
+        size: new Vector(Config.anchoFichas*1.3, Config.longitudPista)
     });
+    pista1.setReserva(new Vector(pista1.pos.x-150,pista1.pos.y-200));
     pista1.setRecursos(recursos);
 
     pista2 = new Pista({
         name: 'pista2',
-        pos: new phoenix.Vector(Luxe.screen.w/2,425,0,0),
-        color: new Color(0,0,255,1.0),            
-        size: new Vector(Config.longitudPista, altoFichas*1.3)
+        pos: new phoenix.Vector(Luxe.screen.w/2+Config.anchoFichas*1.3,Luxe.screen.h/2,0,0),
+        color: new Color(0,255,255,1.0),            
+        size: new Vector(Config.anchoFichas*1.3, Config.longitudPista)
     });
+    pista2.setReserva(new Vector(pista2.pos.x+150,pista2.pos.y-200));
     pista2.setRecursos(recursos);
 
-
-    
-
-
+    premios = new Premios(); 
     indicadorTurno = new Sprite({
         name: 'indicador',
-        pos: new phoenix.Vector(25,pista2.pos.y,0,0),
+        pos: new phoenix.Vector(pista2.pos.x,100,0,0),
         color: new Color().rgb(0x000000),
         size: new Vector(30, 30), 
         geometry: Luxe.draw.circle({
@@ -177,42 +187,40 @@ class GameState extends State {
     });  
     
 
-    //delta_time_text.text = 'con ejec se ponen fichitas \n se pueden cambiar las fichas seleccionandolas con click \n solo se pueden cambiar si el circulo apunta a la pista de las fichas \n el cuadrado de al lado se puede arastrar ---> \n si se arrastra a un grupo de fichas que sumadas tengan el mismo ancho \n que el cuadrado, estas fichitas se reemplazaran por una ficha rosa';
-
   }
 
   override public function onmousedown(event:MouseEvent):Void{
-
+      trace(event.pos);
       var tipo=recursos.clickSpawn(event.pos,turno,fichasRestantes);
       if(tipo!=-1){              //si toma de los recursos
+        tipoDeFichaArrastrada=0;
         block = new Sprite({
           name: 'bloque',
           pos: new phoenix.Vector(event.pos.x,event.pos.y,0,0),
           color: new Color().rgb(Config.fichas.tipos[tipo].color),
-          size: new Vector(Config.fichas.tipos[tipo].ancho, altoFichas), 
+          size: new Vector(anchoFichas, Config.fichas.tipos[tipo].alto), 
 
         });
         arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
         block.add(arrastrador);  
-      }else{                      
-        var pista:Pista;
-        if(turno){
-          pista=pista1;
-        }else{
-          pista=pista1;
-        }
+      }else{                    
+        var pista:Pista=obtenerPista();
+        if(pista!=null){
+          tipoDeFichaArrastrada=1;
+          if(pista.reserva.quitarReserva(event.pos)){              //si toma de las reservas
+            block = new Sprite({
+              name: 'bloque',
+              pos: new phoenix.Vector(event.pos.x,event.pos.y,0,0),
+              color: new Color().rgb(Config.fichas.tipos[0].color),
+              size: new Vector(anchoFichas, Config.fichas.tipos[0].alto), 
 
-        if(pista.reserva.quitarReserva(event.pos)){              //si toma de las reservas
-          block = new Sprite({
-            name: 'bloque',
-            pos: new phoenix.Vector(event.pos.x,event.pos.y,0,0),
-            color: new Color().rgb(Config.fichas.tipos[0].color),
-            size: new Vector(Config.fichas.tipos[0].ancho, altoFichas), 
-
-          });
-          arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
-          block.add(arrastrador);  
+            });
+            arrastrador = new componentes.Arrastrador({ name:'arrastrador' });
+            block.add(arrastrador);  
+          }
         }
+        
+        
       } 
   }
   
@@ -222,35 +230,35 @@ class GameState extends State {
   }
 
   function obtenerPista():Pista{
-    if(turno)return pista1;
-    else return pista2;
+    if(turno==1)return pista1;
+    else{
+      if (turno==2) return pista2;
+      else return null;
+      } 
   }
 
-  //coloca las fichitas
-  function colocar(){
-    trace("pista1 "+ pista1.acum+"_pista2 "+pista2.acum);
+  function cambiarTurno(){
+    //trace('pista1:'+pista1.acum+' -pista2:'+pista2.acum);
     var pista=obtenerPista();
-    if(pista.acum%216!=0 || pista.acum==0){
-      turno=!turno;
-      if(turno){    //indicador de turno(la pelotita)
-        indicadorTurno.pos.y=pista1.pos.y;
-      }else{
-        indicadorTurno.pos.y=pista2.pos.y;
-      }
-    }      
-
-    //var random: Int = Luxe.utils.random.int(0,3);
-    var random: Int = 20;
-
-    fichasRestantes=random;
-    text1.text='fichas: '+random;
-
+    if(premios.preguntarPremio(pista.obtenerFichasAcumuladas()))return;
+    if (turno==1)turno=2;
+    else if (turno==2)turno=1;
   }
 
+  function siguienteTurno(){
+    cambiarTurno();
+    if(turno==1){    //indicador de turno(la pelotita)
+      indicadorTurno.pos.x=pista1.pos.x;
+    }else{
+      if(turno==2)indicadorTurno.pos.x=pista2.pos.x;
+    }
+    ruleta.encender();
+    text1.text='tirando ruleta..';
+
+  }
   //para probar cosas
   function test(){
-
-
+    pause();
   }
 
 
@@ -275,23 +283,27 @@ class GameState extends State {
       if(block!=null){ if(!block.destroyed){
 
         var i:Int;
-        var j:Int=recursos.identificarTipoAncho(block.size.x);
+        var j:Int=recursos.identificarTipoAlto(block.size.y);
         var pista:Pista;
 
-        if(turno){
-          i=1;
+        if(turno==1){
+          i=0;
           pista=pista1;
           
         }else{
-          i=0;
-          pista=pista2; 
+          if(turno==2){
+            i=1;
+            pista=pista2; 
+          }else return;
+          
         }
 
         if(j==0){    //si se esta poniendo un bloque nuevo
-          if(pista.anadirFicha(j, event.pos)){
-            fichasRestantes--;
+          if(pista.anadirFicha(j, event.pos)){ //si lo suelta dentro 
+            if(tipoDeFichaArrastrada==0)fichasRestantes--;
+            tipoDeFichaArrastrada=-1;
             text1.text='fichas restantes: '+fichasRestantes;
-          }else{
+          }else{ //si lo suelta fuera
             recursos.restantes[i][j].text=""+(Std.parseInt(recursos.restantes[i][j].text)+1);
           }
         }else{      //si se esta reemplazando
@@ -310,25 +322,31 @@ class GameState extends State {
     focus.update(dt);
 
     //intercambio
-    var indice1: Int=-1;
-    var indice2: Int=-1;
-    var pista:Pista;
 
-    if(turno){
+    var pista:Pista=null;
+
+    if(turno==1){
       pista=pista1;
     }else{ 
-      pista=pista2;
+      if(turno==2)pista=pista2;
+      else return;
     }
 
-    for(a in 0...pista.listaFichas.length){ //identificando los indices
+    var indice1: Int=-1;
+    var indice2: Int=-1;
+
+    if(pista!=null){
+      for(a in 0...pista.listaFichas.length){ //identificando los indices
       if(pista.listaFichas[a].get('sensor').estaSeleccionado()){
         if(indice1<0)indice1=a;
         else indice2=a;
+        }
       }
+      if(indice2>-1){
+        pista.intercambiar(indice1, indice2);
+      }   
     }
-    if(indice2>-1){
-      pista.intercambiar(indice1, indice2);
-    }    
+     
 
     if (state_machine.current_state != null &&
         state_machine.current_state.name == "pause") {

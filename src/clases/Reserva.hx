@@ -12,6 +12,7 @@ class Reserva extends Sprite
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
 	private var altoFichas : Float = Config.altoFichas;
+	private var anchoFichas : Float = Config.anchoFichas;
 	private var recursos : Recursos;
 
 	override function init():Void{
@@ -19,15 +20,15 @@ class Reserva extends Sprite
 	}
 
 
-	public function colocar(ancho : Float, color : Color):Bool{
-		if(acum<this.size.x){
+	public function colocar(alto : Float, color : Color):Bool{
+		if(acum<this.size.y){
 			listaFichas.push(
 				new Sprite({
-				pos: new phoenix.Vector(acum+ancho/2-this.size.x/2+this.pos.x,this.pos.y,0,0),
+				pos: new phoenix.Vector(this.pos.x,this.pos.y+this.size.y/2-acum-alto/2,0,0),
 				color: color,
-				size: new Vector(ancho, altoFichas), 
+				size: new Vector(anchoFichas, alto), 
 		    }));
-		    acum=acum+ancho+1;
+		    acum=acum+alto+1;
 		    return true;
 		}return false;
 	    
