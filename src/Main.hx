@@ -48,6 +48,44 @@ class Main extends luxe.Game {
 
     // Load basic images
     config.preload.textures.push({ id:'assets/logo.png' });
+    config.preload.textures.push({ id:'assets/a1.png' });
+    config.preload.textures.push({ id:'assets/a2.png' });
+
+    config.preload.textures.push({ id:'assets/l0.png' });
+    config.preload.textures.push({ id:'assets/l1.png' });
+    config.preload.textures.push({ id:'assets/l2.png' });
+    config.preload.textures.push({ id:'assets/l3.png' });
+    config.preload.textures.push({ id:'assets/r0.png' });
+    config.preload.textures.push({ id:'assets/r1.png' });
+    config.preload.textures.push({ id:'assets/r2.png' });
+    config.preload.textures.push({ id:'assets/r3.png' });
+
+    config.preload.textures.push({ id:'assets/r.png' });
+
+    config.preload.textures.push({ id:'assets/ruleta21.png' });
+    config.preload.textures.push({ id:'assets/ruleta22.png' });
+    config.preload.textures.push({ id:'assets/ruleta23.png' });
+    config.preload.textures.push({ id:'assets/ruleta11.png' });
+    config.preload.textures.push({ id:'assets/ruleta12.png' });
+    config.preload.textures.push({ id:'assets/ruleta13.png' });
+    config.preload.textures.push({ id:'assets/r.png' });
+
+    
+
+
+    config.preload.textures.push({ id:'assets/martillol0.png' });
+    config.preload.textures.push({ id:'assets/martillol1.png' });
+    config.preload.textures.push({ id:'assets/martillol2.png' });
+    config.preload.textures.push({ id:'assets/martillol3.png' });
+    config.preload.textures.push({ id:'assets/martillor0.png' });
+    config.preload.textures.push({ id:'assets/martillor1.png' });
+    config.preload.textures.push({ id:'assets/martillor2.png' });
+    config.preload.textures.push({ id:'assets/martillor3.png' });
+
+    config.preload.textures.push({ id:'assets/basePremio.png' });
+
+    config.preload.textures.push({ id:'assets/z.png' });
+
 
     return config;
   }

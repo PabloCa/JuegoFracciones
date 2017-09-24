@@ -45,7 +45,7 @@ class PauseState extends State {
         parent: panel,
         name: 'title',
         x:0, y:30, w:Luxe.screen.w, h:64,
-        text: 'Pause',
+        text: 'En construccion..',
         align:center,
         text_size: 56
     });
@@ -54,7 +54,7 @@ class PauseState extends State {
       parent: panel,
       name: 'resume_button',
       x: Luxe.screen.mid.x - (320 / 2), y: title.y + title.h + 200, w: 320, h: 64,
-      text: 'Resume',
+      text: 'Regresar',
       text_size: 28,
       options: { },
       onclick: function(_, _) {

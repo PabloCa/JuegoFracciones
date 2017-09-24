@@ -48,18 +48,10 @@ class SensorClick extends Component {
     }
 
     public function ponerSeleccion():Void{
-        fondo = new Sprite({
-            pos: new phoenix.Vector(sprite.pos.x,sprite.pos.y,0,0),
-            color: setColorDefault,
-            size: new Vector(sprite.size.x-10, sprite.size.y-10), 
-        });
-        sprite.color=new Color().rgb(0xffffff);
         seleccionado=true;
     }
 
     public function quitarSeleccion():Void{
-        sprite.color=setColorDefault;
-        fondo.destroy();
         seleccionado = false;
     }
 

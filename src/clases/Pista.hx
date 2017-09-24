@@ -13,14 +13,17 @@ class Pista extends Sprite
 	public var listaFichas : Array<Sprite>;
 	public var acum : Float = 0;
 	public var reserva:Reserva;	
-	private var altoFichas : Float = Config.altoFichas;//*-------
 	private var anchoFichas : Float = Config.anchoFichas;
 	private var recursos : Recursos;
+	private var turno : Int;
 	
 
 	override function init():Void{
 		listaFichas = new Array<Sprite>();
 
+	}
+	public function setTurno(t:Int):Void{
+		this.turno=t;
 	}
 
 	public function setReserva(posicion:Vector){
@@ -35,15 +38,15 @@ class Pista extends Sprite
 		this.recursos=rec;
 	}
 
-	public function colocar(alto : Float, color : Color):Bool{
+	public function colocar(tipo : Int):Bool{
 		if(!estaLlena()){
 			listaFichas.push(
 				new Sprite({
-				pos: new phoenix.Vector(this.pos.x, (this.size.y+Luxe.screen.h)/2-(acum+alto/2),0,0),
-				color: color,
-				size: new Vector(anchoFichas, alto), 
+				pos: new phoenix.Vector(this.pos.x, (this.size.y+Luxe.screen.h)/2+117-(acum+Config.fichas.tipos[tipo].alto/2),0,0),
+				texture: Config.imagenes.orientacion[turno-1].alto[tipo].imagen,
+				size: new Vector(anchoFichas, Config.fichas.tipos[tipo].alto), 
 		    }));
-		    acum=acum+alto+1;
+		    acum=acum+Config.fichas.tipos[tipo].alto+1;
 		    var componenteColor= new componentes.SensorClick({ name:'sensor' });
 		    componenteColor.colorInicial(color);
 		    listaFichas[listaFichas.length-1].add(componenteColor);
@@ -96,7 +99,7 @@ class Pista extends Sprite
 
 				//pongo una nueva, el sprite que reemplaza al final del array
 
-				colocar(largo,col);
+				colocar(identificarTipoAlto(largo));
 
 				//despues de ponerla, la coloco en la posicion donde estaban las otras
 				listaFichas.insert(primero,listaFichas.pop());
@@ -115,7 +118,7 @@ class Pista extends Sprite
 	
 	public function intercambiar(indice1 : Int, indice2 : Int){
 		var aux :Sprite=listaFichas[indice1];
-
+		
         listaFichas[indice1]=listaFichas[indice2];
         listaFichas[indice2]=aux;
         listaFichas[indice1].get('sensor').quitarSeleccion();
@@ -126,13 +129,13 @@ class Pista extends Sprite
 	}
 
 	//decide si se coloca la ficha en la pista o en la reserva
-	public function anadirFicha(tipo : Int, posicion : Vector):Bool{
+	public function anadirFicha(tipo : Int, posicion : Vector):Int{
 		if(this.point_inside(posicion)){
-			return colocar(Config.fichas.tipos[tipo].alto,new Color().rgb(Config.fichas.tipos[tipo].color));
+			if(colocar(tipo))return 1;
 		}else if(this.reserva.point_inside(posicion)){
-			return this.reserva.colocar(Config.fichas.tipos[tipo].alto,new Color().rgb(Config.fichas.tipos[tipo].color));
+			if(this.reserva.colocar(Config.fichas.tipos[tipo].alto,new Color().rgb(Config.fichas.tipos[tipo].color),turno))return 2;
 		}
-		return false;
+		return 0;
 	}
 
 	private function ajustarFichas(){ //ordena las fichas graficamente
@@ -141,9 +144,24 @@ class Pista extends Sprite
         //reposicionando
         for(a in 0...listaFichas.length){ //--se puede optimizar no partiendo de 0
           var extra= listaFichas[a].size.y;
-          listaFichas[a].pos.y=(this.size.y+Luxe.screen.h)/2-acum-extra/2;
+          listaFichas[a].pos.y=(this.size.y+Luxe.screen.h)/2-acum-extra/2+117;
           acum=acum+extra+1;
         }
+
+	}
+
+	public function identificarTipoAlto(alto:Float):Int{
+		for(i in 0...4) if(alto==Config.fichas.tipos[i].alto) return i;		
+		return -1;
+	}
+
+	public function eliminarTodo(){
+		reserva.eliminarTodo();		
+		for(i in 0...listaFichas.length){
+			listaFichas[i].destroy();
+		}
+		listaFichas=null;
+		
 
 	}
 
