@@ -46,10 +46,12 @@ class Main extends luxe.Game {
     // Set up defaults
     config.window.title = config.user.game.name;
 
-    // Load basic images
     config.preload.textures.push({ id:'assets/logo.png' });
+
     config.preload.textures.push({ id:'assets/a1.png' });
     config.preload.textures.push({ id:'assets/a2.png' });
+
+    config.preload.textures.push({ id:'assets/instrucciones.png' });
 
     config.preload.textures.push({ id:'assets/l0.png' });
     config.preload.textures.push({ id:'assets/l1.png' });
@@ -68,9 +70,7 @@ class Main extends luxe.Game {
     config.preload.textures.push({ id:'assets/ruleta11.png' });
     config.preload.textures.push({ id:'assets/ruleta12.png' });
     config.preload.textures.push({ id:'assets/ruleta13.png' });
-    config.preload.textures.push({ id:'assets/r.png' });
-
-    
+    config.preload.textures.push({ id:'assets/r.png' });   
 
 
     config.preload.textures.push({ id:'assets/martillol0.png' });

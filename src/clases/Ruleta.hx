@@ -13,7 +13,7 @@ class Ruleta extends Sprite
 	private var fichasRestantes:Int=0;
 	private var periodo:Float;
 	private var tiempoAcumulado:Float=0;
-	private var encendido:Bool=false;
+	public var encendido:Bool=false;
 	private var gameState:GameState;
 	private var orientacion:Int;
 

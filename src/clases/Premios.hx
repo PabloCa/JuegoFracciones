@@ -87,6 +87,8 @@ class Premios
 	private function dibujarFraccion(posicion:Float):Void{
 		var nominador:Float=posicion;
 		var denominador:Float=8;
+
+		//simplificando
 		while(nominador%2==0){
 			nominador=nominador/2;
 			denominador=denominador/2;

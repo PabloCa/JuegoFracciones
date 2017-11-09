@@ -31,7 +31,7 @@ class MenuState extends State {
     var a_canvas = new AutoCanvas(Luxe.camera.view, {
       name:'canvas',
       rendering: new LuxeMintRender(),
-      options: { color:new Color(1,1,1,0.0) },
+      options: { color:new Color().rgb(0xffff66) },
       x: 0, y:0, w: Luxe.screen.w, h: Luxe.screen.h
     });
     a_canvas.auto_listen();
@@ -50,10 +50,15 @@ class MenuState extends State {
     var play_button = new mint.Button({
       parent: canvas,
       name: 'play_button',
-      x: Luxe.screen.mid.x - (320 / 2), y: 295, w: 320, h: 64,
-      text: 'Play Game',
+      x: Luxe.screen.mid.x - (320 / 2), y: 400, w: 320, h: 64,
+      text: 'Jugar',
       text_size: 28,
-      options: { },
+
+      options: { 
+        color: new Color().rgb(0xF27203),
+        color_hover: new Color().rgb(0xF7A359),
+        color_down: new Color().rgb(0xF7A359),
+        },
       onclick: function(_, _) {
         Main.machine.set("game_state");
       }
@@ -61,15 +66,15 @@ class MenuState extends State {
 
     layout.margin(play_button, image, top, fixed, image.h + 40);
 
-    var options_button: mint.Button = null;
+    //var options_button: mint.Button = null;
 
-    if (Luxe.core.app.config.user.game.controllers > 0) {
+    /*if (Luxe.core.app.config.user.game.controllers > 0) {
       // For now the only option we have is controls
       // so if it's mouse/keyboard only we don't show options
       options_button = new mint.Button({
         parent: canvas,
         name: 'options_button',
-        x: Luxe.screen.mid.x - (320 / 2), y: 391, w: 320, h: 64,
+        
         text: 'Options',
         text_size: 28,
         options: { },
@@ -81,19 +86,25 @@ class MenuState extends State {
       layout.margin(options_button, play_button, left, fixed, 0);
       layout.margin(options_button, play_button, top, fixed, play_button.h + 25);
     }
+    */
 
     var exit_button = new mint.Button({
       parent: canvas,
       name: 'exit_button',
-      x: Luxe.screen.mid.x - (320 / 2), y: 0, w: 320, h: 64,
-      text: 'Exit',
+      x: Luxe.screen.mid.x - (320 / 2), y: 420, w: 320, h: 64,
+      text: 'Salir',
       text_size: 28,
-      options: { },
+      options: { 
+        color: new Color().rgb(0xF27203),
+        color_hover: new Color().rgb(0xF7A359),
+        color_down: new Color().rgb(0xF7A359),
+        },
       onclick: function(_, _) {
         Luxe.core.shutdown();
       }
     });
 
+    /*
     if (Luxe.core.app.config.user.game.controllers > 0) {
       layout.margin(exit_button, options_button, left, fixed, 0);
       layout.margin(exit_button, options_button, top, fixed, options_button.h + 25);
@@ -101,12 +112,12 @@ class MenuState extends State {
       layout.margin(exit_button, play_button, left, fixed, 0);
       layout.margin(exit_button, play_button, top, fixed, play_button.h + 25);
     }
-
+    */
     new mint.Label({
         parent: canvas,
         name: 'information',
         x:0, y:Luxe.screen.h - 64, w:Luxe.screen.w, h:32,
-        text: Luxe.core.app.config.user.game.menu_text,
+        text: '',
         align:center,
         text_size: 14
     });

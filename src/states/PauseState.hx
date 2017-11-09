@@ -15,6 +15,7 @@ class PauseState extends State {
   var canvas: mint.Canvas;
   var focus: ControllerFocus;
   var resume: Void -> Void;
+  var fondo: mint.Image;
 
   public function new(name:String, resume:Void->Void) {
     super({ name:name });
@@ -27,7 +28,7 @@ class PauseState extends State {
     var a_canvas = new AutoCanvas(Luxe.camera.view, {
       name:'canvas',
       rendering: new LuxeMintRender(),
-      options: { color:new Color(1,1,1,0.0) },
+      options: { },
       x: 0, y:0, w: Luxe.screen.w, h: Luxe.screen.h
     });
     a_canvas.auto_listen();
@@ -40,27 +41,42 @@ class PauseState extends State {
       name: 'panel',
       x: 0, y: 0, w: Luxe.screen.w, h: Luxe.screen.h
     });
+    fondo = new mint.Image({
+            parent: panel,
+            name: 'fondo',
+            x: 0, y: 0, w: Luxe.screen.w, h: Luxe.screen.h,
+            options: { },
+            path: 'assets/instrucciones.png'
+        });
 
     var title = new mint.Label({
         parent: panel,
         name: 'title',
-        x:0, y:30, w:Luxe.screen.w, h:64,
-        text: 'En construccion..',
+        x:700, y:500, w:300, h:64,
+        text: '',
         align:center,
-        text_size: 56
+        text_size: 36,
+        options: { color: new Color().rgb(0x000000)},
+        
     });
 
     var resume_button = new mint.Button({
       parent: panel,
       name: 'resume_button',
-      x: Luxe.screen.mid.x - (320 / 2), y: title.y + title.h + 200, w: 320, h: 64,
-      text: 'Regresar',
+      x: 600, y: 50, w: 320, h: 64,
+      text: 'Ir al juego',
       text_size: 28,
-      options: { },
+      options: { 
+        color: new Color().rgb(0x175d5f),
+        color_hover:new Color().rgb(0x328284),
+        color_down: new Color().rgb(0x328284),
+      },
       onclick: function(_, _) {
         resume();
       }
     });
+
+    
   }
 
   override function onleave<T> (_:T) {

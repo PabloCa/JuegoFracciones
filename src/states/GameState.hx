@@ -29,7 +29,6 @@ class GameState extends State {
   var victoria:Sprite;
 
   public var etFichasRestantes : Text;
-  public var consejo : Text;
   public var textoReserva1 : Text;
   public var textoReserva2 : Text;
 
@@ -38,6 +37,7 @@ class GameState extends State {
 
   var posicionMouse : luxe.Vector;
 
+  private var consejo : Consejo;
   var pista1 : Pista;
   var pista2 : Pista;
   var recursos:Recursos;
@@ -45,7 +45,7 @@ class GameState extends State {
   public var premios:Premios;
 
   var arrastrador: componentes.Arrastrador;
-  public var turno : Int = 0;  //1 <, 2 >, 0 aun no empieza
+  public var turno : Int=0;  //1 <-, 2 ->, 0 aun no empieza
   var anchoFichas : Float = Config.anchoFichas;
   public var fichasRestantes : Int =0;
   var tipoDeFichaArrastrada:Int=-1;  //0 para ficha de recursos, 1 para ficha de reserva
@@ -60,7 +60,6 @@ class GameState extends State {
 
   override function onenter<T> (_:T) {
     trace("Gamestate--");   
-
     //cargando sprites de las fichas
     
     Config.imagenes  = {
@@ -91,7 +90,7 @@ class GameState extends State {
     
     fondo = new Sprite({
        name: 'fondo',
-       texture: Luxe.resources.texture('assets/a1.png'),
+       texture: Luxe.resources.texture('assets/a2.png'),
        pos: new Vector(Luxe.screen.mid.x, Luxe.screen.mid.y),
        size: new Vector(Luxe.screen.w,  Luxe.screen.h)
     });
@@ -102,7 +101,6 @@ class GameState extends State {
       name:'canvas',
       rendering: new LuxeMintRender(),
       options: {},
-      //x: Luxe.screen.w-300, y:10, w: 300, h: 150
       x: 0 ,y: 0, w: Luxe.screen.w, h: Luxe.screen.h
     });
     autoCanvas.auto_listen();
@@ -164,7 +162,11 @@ class GameState extends State {
         x: Luxe.screen.w/2-45, y: 5, w: 90, h:22,        
         text:'Instrucciones',
         text_size: 14,
-        options: {},
+        options: {
+          color: new Color().rgb(0x175d5f),
+          color_hover:new Color().rgb(0x328284),
+          color_down: new Color().rgb(0x328284),
+          },
         onclick: function(e,c) {        
           pause();
         }
@@ -179,6 +181,7 @@ class GameState extends State {
         options: { 
           color: new Color().rgb(0x503200),
           color_hover: new Color().rgb(0xA9700D),
+          color_down: new Color().rgb(0xA9700D),
           label: { color:new Color().rgb(0xffffff)} 
         },
 
@@ -190,16 +193,17 @@ class GameState extends State {
       color : new Color().rgb(0x000000),
       pos : new Vector(Luxe.screen.w/2-80,78),
       font : Luxe.renderer.font,
-      point_size : 14
+      point_size : 18
     });
 
-    consejo = new luxe.Text({
+    consejo = new Consejo({
       text: 'Consejo: \nclick en iniciar ¡buena suerte!',
       color : new Color().rgb(0x000000),
       pos : new Vector(Luxe.screen.w/2-125,110),
       font : Luxe.renderer.font,
       point_size : 14
     });
+    pause();
     
   }
 
@@ -262,23 +266,24 @@ class GameState extends State {
   function primerTurno(){
      
     premios = new Premios(); 
-    fondo.texture=Luxe.resources.texture('assets/a2.png');
-    turno=1;
+    turno = Luxe.utils.random.int(1,3);
   }
 
   function siguienteTurno(){
     if(!juegoTerminado){
-      if(turno==0)primerTurno();
-      else cambiarTurno();
-      premios.premioMerecido=false;      
-      ruleta.encender();
-      cambioTurno.label.text='FIN \n turno';
-      etFichasRestantes.text= 'Fichas restantes: -';
-      if(Std.parseInt(recursos.restantes[turno-1][0].text)>0){
-        consejo.text='Consejo: \narrastra fichas de 1/8 en la construcción';
-      }else{
-        consejo.text='Consejo: \nhaz un reemplazo para recuperar fichas';
-      }
+      if(!ruleta.encendido){
+        if(turno==0)primerTurno();
+        else cambiarTurno();
+        premios.premioMerecido=false;      
+        ruleta.encender();
+        cambioTurno.label.text='FIN \n turno';
+        etFichasRestantes.text= 'Fichas restantes: -';
+        if(Std.parseInt(recursos.restantes[turno-1][0].text)>0){
+          consejo.cambiarTexto('Consejo: \narrastra fichas de 1/8 en la construcción');
+        }else{
+          consejo.cambiarTexto('Consejo: \nhaz un reemplazo para recuperar fichas');
+        }
+      }      
     }else reiniciar();
   }
   //para probar cosas
@@ -296,9 +301,7 @@ class GameState extends State {
     if(!etFichasRestantes.destroyed){
       etFichasRestantes.destroy();
     } 
-    if(!consejo.destroyed){
-      consejo.destroy();
-    }
+
     if(!cambioTurno.destroyed){
       cambioTurno.destroy();
     } 
@@ -308,7 +311,7 @@ class GameState extends State {
     if(!ruleta.destroyed){
      ruleta.destroy();
     }
-
+    consejo.eliminar();
     recursos.eliminarTodo();
     recursos=null;
     pista1.eliminarTodo();
@@ -373,20 +376,20 @@ class GameState extends State {
 
             //eleccion de consejos
             if(pista.estaLlena()){
-              consejo.text='Consejo: \n¡ya casi ganas!, completa el edificio \ncon fichas de un entero';
+              consejo.cambiarTexto('Consejo: \n¡ya casi ganas!, completa el edificio \ncon fichas de un entero');
             }else{
               if(exitoAnadir==1){
                 if(premios.cambiarMartillo(pista.obtenerFichasAcumuladas(),turno))
-                  consejo.text='Consejo: \nestás en una zona premiada, si haces un \nreemplazo tendrás un turno extra';//--2
+                  consejo.cambiarTexto('Consejo: \nestás en una zona premiada, si haces un \nreemplazo tendrás un turno extra');//--2
                 else{
                   if(fichasRestantes>0){
                     if(Std.parseInt(recursos.restantes[i][j].text)>0){
-                      consejo.text='Consejo:\narrastra fichas de 1/8 en la construcción';
+                      consejo.cambiarTexto('Consejo: \narrastra fichas de 1/8 en la construcción');
                       cambioTurno.label.text='FIN \n turno';
                     }else{
-                      consejo.text='Consejo: \nhaz un reemplazo para recuperar fichas';
+                      consejo.cambiarTexto('Consejo: \nhaz un reemplazo para recuperar fichas');
                     }
-                  }else consejo.text='Consejo: \nya ocupaste todas las fichas de este \nturno, puedes terminar tu turno';
+                  }else consejo.cambiarTexto('Consejo: \nya ocupaste todas las fichas de este \nturno, puedes terminar tu turno');
                 }
               }              
             }
@@ -400,13 +403,13 @@ class GameState extends State {
           if(pista.identificarReemplazo(block,turno)){  //cambiando el coton del siguiente turno
             if(premios.merecePremio(pista.obtenerFichasAcumuladas(),turno)){
               cambioTurno.label.text='turno \nextra';
-              consejo.text='Consejo: \n¡tienes un turno extra! recuerda dejar las\nfichas que sobren en la reserva';
+              consejo.cambiarTexto('Consejo: \n¡tienes un turno extra! recuerda dejar las\nfichas que sobren en la reserva');
             }
             if(Std.parseInt(recursos.restantes[i][3].text)==0){
               juegoTerminado=true;
               cambioTurno.label.text=' re-\niniciar';
               if(i==0){
-                consejo.text='¡Genial! \n¡el jugador de la izquierda ha ganado!';
+                consejo.cambiarTexto('¡Genial! \n¡el jugador de la izquierda ha ganado!');
                 victoria = new Sprite({
                    name: 'victoria',
                    texture: Luxe.resources.texture('assets/z.png'),
@@ -416,7 +419,7 @@ class GameState extends State {
 
               }
               if(i==1){
-                consejo.text='¡Genial! \n¡el jugador de la derecha ha ganado!';
+                consejo.cambiarTexto('¡Genial! \n¡el jugador de la derecha ha ganado!');
                 victoria = new Sprite({
                    name: 'victoria',
                    texture: Luxe.resources.texture('assets/z.png'),
