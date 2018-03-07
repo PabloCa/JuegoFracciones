@@ -10,8 +10,6 @@ import luxe.Vector;
 class SensorClick extends Component {
 
     var sprite : Sprite;
-	var fondo : Sprite;
-    var setColorDefault : Color;
     var isOver:Bool = false;
     var seleccionado:Bool = false;
 
@@ -31,9 +29,6 @@ class SensorClick extends Component {
         }
     }
 
-    public function colorInicial(col:Color):Void{
-        setColorDefault=col;
-    }
 
     override public function onmousedown(event:MouseEvent):Void
     {
@@ -66,7 +61,6 @@ class SensorClick extends Component {
     function onout():Void
     {
         isOver = false;
-        //color normal
     }
 
     function estaSeleccionado():Bool
