@@ -1,1 +1,1 @@
-Juego para espeñar fracciones
+Juego para enseñar fracciones
